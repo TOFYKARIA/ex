@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="theme-color" content="#000000">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<link rel="stylesheet" href="css/game.css">
+		<style>
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background: #000;
+            }
+            #stage {
+                width: 100vw !important;
+                height: 100vh !important;
+                position: fixed !important;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            canvas {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain;
+                max-width: 100vw;
+                max-height: 100vh;
+            }
+            #fullscreen-btn {
+                position: fixed;
+                bottom: env(safe-area-inset-bottom, 15px);
+                right: env(safe-area-inset-right, 15px);
+                width: 50px;
+                height: 50px;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                z-index: 2147483647;
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            #fullscreen-btn:hover {
+                background: rgba(255, 255, 255, 0.8);
+                color: black;
+                transform: scale(1.1);
+            }
+
+            #fullscreen-btn:active {
+                transform: scale(0.9);
+            }
+
+            .overlay {
+                z-index: 9999;
+                position: fixed;
+                padding: env(safe-area-inset-top, 15px) env(safe-area-inset-right, 15px) env(safe-area-inset-bottom, 15px) env(safe-area-inset-left, 15px);
+            }
+        </style>
+	</head>
+	<body>
+		<div id="stage"></div>
+		<div id="modal_shade"></div>
+		<div class="overlay" id="warning">
+			<div dir="rtl"> Dad! </div>
+			<div dir="rtl">
+			your browser doesn't support webgl.<br>
+			try a different browser or computer?<br>
+			<br>
+			Your browser is off! Use another browser or computer!
+			</div>
+		</div>
+		<div class="overlay" id="paused">
+			<div>paused</div>
+			<div dir="rtl">
+			click anywhere to resume<br>
+			Click somewhere to return!
+			</div>
+		</div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Lock orientation to landscape on supported devices
+                function lockOrientation() {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch(function(error) {
+                            console.log('Orientation lock failed:', error);
+                        });
+                    }
+                }
+
+                setTimeout(() => {
+                    let btn = document.createElement("button");
+                    btn.id = "fullscreen-btn";
+                    btn.innerHTML = "⛶";
+                    document.body.appendChild(btn);
+
+                    btn.addEventListener("click", function() {
+                        let gameContainer = document.querySelector("#stage") || document.documentElement;
+
+                        if (!document.fullscreenElement && 
+                            !document.mozFullScreenElement && 
+                            !document.webkitFullscreenElement && 
+                            !document.msFullscreenElement) {
+
+                            if (gameContainer.requestFullscreen) {
+                                gameContainer.requestFullscreen();
+                            } else if (gameContainer.msRequestFullscreen) {
+                                gameContainer.msRequestFullscreen();
+                            } else if (gameContainer.mozRequestFullScreen) {
+                                gameContainer.mozRequestFullScreen();
+                            } else if (gameContainer.webkitRequestFullscreen) {
+                                gameContainer.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                            }
+
+                            lockOrientation();
+                            btn.innerHTML = "✕";
+                        } else {
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                            } else if (document.msExitFullscreen) {
+                                document.msExitFullscreen();
+                            } else if (document.mozCancelFullScreen) {
+                                document.mozCancelFullScreen();
+                            } else if (document.webkitExitFullscreen) {
+                                document.webkitExitFullscreen();
+                            }
+
+                            btn.innerHTML = "⛶";
+                        }
+                    });
+
+                    // Handle orientation changes
+                    window.addEventListener('orientationchange', lockOrientation);
+
+                    document.addEventListener('fullscreenchange', updateFullscreenButton);
+                    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+                    document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+                    document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+
+                    function updateFullscreenButton() {
+                        if (!document.fullscreenElement && 
+                            !document.mozFullScreenElement && 
+                            !document.webkitFullscreenElement && 
+                            !document.msFullscreenElement) {
+                            btn.innerHTML = "⛶";
+                        } else {
+                            btn.innerHTML = "✕";
+                        }
+                    }
+                }, 1000);
+            });
+        </script>
+
+        <!-- External Libraries -->
+        <script src="js/lib/pixi.min.js"></script>
+        <script src="js/lib/howler.js"></script>
+        <script src="js/lib/stats.min.js"></script>
+        <script>var createjs = window;</script>
+        <script src="js/lib/tweenjs-0.6.2.min.js"></script>
+        <script>Ticker.framerate=60; Ticker.paused=true;</script>
+        <script src="js/lib/helpers.js"></script>
+
+        <!-- Text Strings -->
+        <script src="js/textStrings.js"></script>
+
+        <!-- Core Engine Code -->
+        <script src="js/core/Game.js"></script>
+        <script src="js/core/SceneManager.js"></script>
+        <script src="js/core/Scene.js"></script>
+
+        <!-- Main Game Scene Code -->
+        <script src="js/game/World.js"></script>
+        <script src="js/game/Camera.js"></script>
+        <script src="js/game/Director.js"></script>
+        <script src="js/game/Peep.js"></script>
+        <script src="js/game/TV.js"></script>
+        <script src="js/game/AnimationProp.js"></script>
+        <script src="js/game/ScreenShake.js"></script>
+        <script src="js/game/ScreenZoomOut.js"></script>
+        <script src="js/game/Gore.js"></script>
+        <script src="js/game/DeadBody.js"></script>
+        <script src="js/game/Blood.js"></script>
+
+        <!-- Peeps -->
+        <script src="js/peeps/NormalPeep.js"></script>
+        <script src="js/peeps/CrazyPeep.js"></script>
+        <script src="js/peeps/NervousPeep.js"></script>
+        <script src="js/peeps/SnobbyPeep.js"></script>
+        <script src="js/peeps/AngryPeep.js"></script>
+        <script src="js/peeps/HatPeep.js"></script>
+        <script src="js/peeps/LoverPeep.js"></script>
+        <script src="js/peeps/ProtestAnim.js"></script>
+        <script src="js/peeps/HelpingAnim.js"></script>
+        <script src="js/peeps/HappyWeirdoPeep.js"></script>
+        <script src="js/peeps/EvilHatPeep.js"></script>
+        <script src="js/peeps/PanicPeep.js"></script>
+        <script src="js/peeps/MurderPeep.js"></script>
+
+        <!-- Misc -->
+        <script src="js/misc/Candlelight.js"></script>
+        <script src="js/misc/LoversWatching.js"></script>
+        <script src="js/misc/Cricket.js"></script>
+        <script src="js/misc/Cursor.js"></script>
+
+        <!-- Scenes -->
+        <script src="js/scenes/Scene_Preloader.js"></script>
+        <script src="js/scenes/Scene_Quote.js"></script>
+        <script src="js/scenes/Scene_Game.js"></script>
+        <script src="js/scenes/Scene_Credits.js"></script>
+        <script src="js/scenes/Scene_Post_Credits.js"></script>
+        <script src="js/scenes/Scene_Post_Post_Credits.js"></script>
+        <script src="js/scenes/Scene_EndPrototype.js"></script>
+        <script src="js/scenes/Act_I.js"></script>
+        <script src="js/scenes/Act_II.js"></script>
+        <script src="js/scenes/Act_III.js"></script>
+        <script src="js/scenes/Scene_Meta.js"></script>
+
+        <!-- Game Scripts -->
+        <script>
+            Game.stats = false;
+            window.onload = function(){
+                try{
+                    Game.init();
+                }catch(e){
+                    document.getElementById("warning").style.display = "block";
+                }
+            };
+            window.SHARE_TEXT = 'I just played a very scary game right now'
+            window.SHARE_URL = "";
+        </script>
+	</body>
+  </html>
